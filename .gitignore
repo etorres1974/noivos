@@ -1,0 +1,3 @@
+# Local config — contains real secrets (Pix key, Google Forms IDs)
+# Never commit this file. See config.example.js for the expected shape.
+config.js
