@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Site config: Pix key + Google Forms IDs. File is gitignored; see config.example.js -->
+<script src="config.js"></script>
 <style>
   :root {
     /* Eucalipto palette — low chroma, modern */
@@ -1324,7 +1326,7 @@
     <div class="pix-key-box">
       <div>
         <div class="key-label">Chave Pix (email)</div>
-        <div class="key-val" id="pix-key">eduardo.laura@noivos.com.br</div>
+        <div class="key-val" id="pix-key"></div>
       </div>
       <button class="pix-copy" id="pix-copy-btn">Copiar</button>
     </div>
@@ -1338,6 +1340,34 @@
 </div>
 
 <script>
+  /* ─── Config ────────────────────────────────────────── */
+  // CONFIG is loaded from config.js (gitignored). If the file is missing
+  // (e.g. opening index.html directly as a file://), fall back gracefully.
+  if (typeof CONFIG === 'undefined') {
+    console.warn('config.js not loaded — Pix key and Google Forms disabled. Run via a local server.');
+    window.CONFIG = { PIX_KEY: '', GF_FORM_ID: '', GF_ENTRY_NAME: '', GF_ENTRY_PHONE: '',
+                      GF_ENTRY_ATTENDING: '', GF_ENTRY_COMPANIONS: '', GF_ENTRY_RESTRICT: '', GF_ENTRY_MESSAGE: '' };
+  }
+
+  // Inject Pix key from config into the modal element
+  const pixKeyEl = document.getElementById('pix-key');
+  if (pixKeyEl) pixKeyEl.textContent = CONFIG.PIX_KEY;
+
+  /* ─── Google Forms RSVP config ──────────────────────── */
+  // Entry IDs come from CONFIG (config.js / config.example.js).
+  // Form ID and entry IDs are not secrets — only PIX_KEY must stay out of git.
+  const GF_ENDPOINT = CONFIG.GF_FORM_ID
+    ? `https://docs.google.com/forms/d/e/${CONFIG.GF_FORM_ID}/formResponse`
+    : null;
+  const GF_FIELDS = {
+    name:         CONFIG.GF_ENTRY_NAME,
+    phone:        CONFIG.GF_ENTRY_PHONE,
+    attending:    CONFIG.GF_ENTRY_ATTENDING,
+    companions:   CONFIG.GF_ENTRY_COMPANIONS,
+    restrictions: CONFIG.GF_ENTRY_RESTRICT,
+    message:      CONFIG.GF_ENTRY_MESSAGE,
+  };
+
   /* ─── Countdown ──────────────────────────────────────── */
   const WEDDING_DATE = new Date('2026-08-12T18:30:00-04:00');
   const pad = (n, l = 2) => String(n).padStart(l, '0');
@@ -1423,23 +1453,54 @@
     });
   }
 
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    const name = document.getElementById('rsvp-name').value.trim();
+    const name  = document.getElementById('rsvp-name').value.trim();
     const phone = document.getElementById('rsvp-phone').value.trim();
     if (!name || !phone) {
       if (!name) document.getElementById('rsvp-name').focus();
-      else document.getElementById('rsvp-phone').focus();
+      else       document.getElementById('rsvp-phone').focus();
       return;
     }
+
+    const companions = Array.from(document.querySelectorAll('.companion-name'))
+      .map(i => i.value.trim()).filter(Boolean);
+
     const data = {
       name, phone,
-      attending: attendVal,
-      companions: Array.from(document.querySelectorAll('.companion-name')).map(i => i.value.trim()).filter(Boolean),
+      attending:    attendVal,
+      companions,
       restrictions: document.getElementById('rsvp-restr').value.trim(),
-      message: document.getElementById('rsvp-msg').value.trim(),
-      ts: Date.now(),
+      message:      document.getElementById('rsvp-msg').value.trim(),
+      ts:           Date.now(),
     };
+
+    // Loading state
+    const submitBtn = form.querySelector('.form-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando…';
+
+    // Submit to Google Forms in the background
+    if (GF_ENDPOINT) {
+      try {
+        // Google Forms doesn't support CORS — no-cors sends the request
+        // without reading the response. The submission still goes through.
+        // Confirm success by checking the linked Google Sheet, not DevTools.
+        const body = new URLSearchParams();
+        body.append(GF_FIELDS.name,         data.name);
+        body.append(GF_FIELDS.phone,        data.phone);
+        body.append(GF_FIELDS.attending,    data.attending === 'yes' ? 'Sim' : 'Não');
+        body.append(GF_FIELDS.companions,   companions.join(', '));
+        body.append(GF_FIELDS.restrictions, data.restrictions);
+        body.append(GF_FIELDS.message,      data.message);
+        await fetch(GF_ENDPOINT, { method: 'POST', mode: 'no-cors', body });
+      } catch (err) {
+        // Network error — localStorage fallback still saves the response
+        console.warn('Google Forms submit failed:', err);
+      }
+    }
+
+    // Always save locally and show success regardless of network outcome
     localStorage.setItem('rsvp_eduardo_laura', JSON.stringify(data));
     showSuccess(name);
   });
