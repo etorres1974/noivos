@@ -47,6 +47,7 @@ Everything else in the repo is reference material or original wireframe files �
 
 ```
 index.html                                    ← EDIT THIS — single source of truth
+gifts.json                                    ← EDIT THIS to add/remove/change gift items
 design_handoff_wedding_site_eduardo_laura/
     README.md                                 ← Full design spec (good reference)
     assets/
@@ -147,6 +148,34 @@ nav-mobile-overlay                       mobile full-screen nav
 
 ---
 
+## Editing the Gift List
+
+The gift list is driven entirely by `gifts.json` at the repo root. No HTML or JS changes needed.
+
+Each item has these fields:
+```json
+{
+  "id":    "g1",          // unique string — never reuse an ID (localStorage tracks given status by ID)
+  "cat":   "Cozinha",     // category label shown above the name
+  "name":  "Jogo de panelas",
+  "desc":  "Linha tramontina inox premium, 7 peças.",
+  "price": 890,           // integer, BRL, no cents
+  "icon":  "pot"          // see available icons below
+}
+```
+
+Available icon values: `pot`, `bed`, `coffee`, `wine`, `glass`, `fork`, `leaf`, `vase`
+
+To add an item: append a new object to the array with a unique `id`.
+To remove an item: delete its object from the array.
+To change details: edit the relevant fields.
+
+> **Note:** `gifts.json` is fetched at runtime via `fetch('gifts.json')`. This works
+> fine on GitHub Pages and any static server, but will not work if you open
+> `index.html` directly as a local file (`file://`). Use `python3 -m http.server 8080` to test locally.
+
+---
+
 ## Known Pending Items (Backlog)
 
 | Priority | Item | Detail |
@@ -170,6 +199,7 @@ nav-mobile-overlay                       mobile full-screen nav
 | Session 2 (AI) | Fixed hero image (was placeholder → now `couple_kiss.png`), fixed modal animation, added mobile hamburger menu, added IntersectionObserver nav active state, added fade-in scroll animations; created `dev-genspark` branch; added `index.html` for GitHub Pages |
 | Session 3 (AI) | Added `README.md` (project docs) and `CLAUDE.md` (this file, AI handoff context) |
 | Session 4 (AI) | Removed `Eduardo e Laura.html` — `index.html` is now the single source of truth; updated CLAUDE.md and README.md to reflect the simplified workflow |
+| Session 5 (AI) | Extracted gift list from inline JS into `gifts.json`; `index.html` now fetches it at runtime — edit the JSON to manage the gift list without touching HTML/JS |
 
 ---
 

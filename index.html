@@ -1439,17 +1439,10 @@
   renderCompanions();
 
   /* ─── Gift list ──────────────────────────────────────── */
-  const GIFTS = [
-    { id: 'g1', cat: 'Cozinha', name: 'Jogo de panelas', desc: 'Linha tramontina inox premium, 7 peças.', price: 890, icon: 'pot' },
-    { id: 'g2', cat: 'Casa', name: 'Jogo de cama Queen', desc: 'Algodão egípcio 300 fios, cor off-white.', price: 620, icon: 'bed' },
-    { id: 'g3', cat: 'Sala', name: 'Cafeteira italiana', desc: 'Moka inox 6 xícaras + moedor manual.', price: 480, icon: 'coffee' },
-    { id: 'g4', cat: 'Lua de mel', name: 'Jantar especial', desc: 'Uma noite à dois em restaurante na viagem.', price: 700, icon: 'wine' },
-    { id: 'g5', cat: 'Casa', name: 'Conjunto de taças', desc: 'Cristal soprado, 6 unidades para vinho tinto.', price: 540, icon: 'glass' },
-    { id: 'g6', cat: 'Cozinha', name: 'Faqueiro 24 peças', desc: 'Inox escovado com cabo de madeira.', price: 760, icon: 'fork' },
-    { id: 'g7', cat: 'Lua de mel', name: 'Diária no hotel', desc: 'Contribuição para uma noite especial.', price: 1200, icon: 'bed' },
-    { id: 'g8', cat: 'Casa', name: 'Aromatizador de ambientes', desc: 'Difusor com aroma de eucalipto e cedro.', price: 280, icon: 'leaf' },
-    { id: 'g9', cat: 'Sala', name: 'Vaso de cerâmica', desc: 'Peça artesanal grande, tom terroso.', price: 390, icon: 'vase' },
-  ];
+  // Gift data lives in gifts.json — edit that file to add/remove/change items.
+  // Icon names map to the ICONS lookup below. Available icons:
+  //   pot, bed, coffee, wine, glass, fork, leaf, vase
+  let GIFTS = [];
 
   const ICONS = {
     pot: '<path d="M14 18h36v22a8 8 0 01-8 8H22a8 8 0 01-8-8V18z" /><path d="M10 18h44M22 12v6M42 12v6"/>',
@@ -1487,7 +1480,14 @@
         </div>`;
     }).join('');
   }
-  renderGifts();
+
+  // Load gift list from gifts.json, then render
+  fetch('gifts.json')
+    .then(r => r.json())
+    .then(data => { GIFTS = data; renderGifts(); })
+    .catch(() => {
+      giftsGrid.innerHTML = '<p style="color:var(--ink-3);text-align:center;padding:2rem">Não foi possível carregar a lista de presentes.</p>';
+    });
 
   /* ─── Modal ──────────────────────────────────────────── */
   const modal = document.getElementById('gift-modal');

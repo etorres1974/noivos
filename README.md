@@ -12,6 +12,7 @@ Live at: **https://etorres1974.github.io/noivos/**
 noivos/
 │
 ├── index.html                          ← MAIN SOURCE FILE — edit this directly
+├── gifts.json                          ← Gift list data — edit to add/remove/change gifts
 │
 ├── Wireframes Eduardo e Laura.html     ← Original lo-fi wireframe deck (reference only)
 ├── Wireframes Eduardo e Laura.html.srcmap.json
@@ -50,6 +51,33 @@ git add index.html
 git commit -m "your message"
 git push origin dev-genspark
 ```
+
+---
+
+## Editing the Gift List
+
+The gift list is driven by **`gifts.json`** at the repo root — no HTML or JS changes needed.
+
+Each item has these fields:
+
+```json
+{
+  "id":    "g1",
+  "cat":   "Cozinha",
+  "name":  "Jogo de panelas",
+  "desc":  "Linha tramontina inox premium, 7 peças.",
+  "price": 890,
+  "icon":  "pot"
+}
+```
+
+Available icon values: `pot`, `bed`, `coffee`, `wine`, `glass`, `fork`, `leaf`, `vase`
+
+- **Add** an item → append a new object with a unique `id`
+- **Remove** an item → delete its object
+- **Change** details → edit the relevant fields
+
+> The `id` field is used by `localStorage` to remember which gifts have been marked as given — never reuse an ID once it has been live.
 
 ---
 
