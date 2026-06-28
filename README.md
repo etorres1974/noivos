@@ -13,6 +13,9 @@ noivos/
 │
 ├── index.html                          ← MAIN SOURCE FILE — edit this directly
 ├── gifts.json                          ← Gift list data — edit to add/remove/change gifts
+├── assets/
+│   └── gifts/                          ← Gift images — drop files here and reference in gifts.json
+│       └── netflix.png
 │
 ├── Wireframes Eduardo e Laura.html     ← Original lo-fi wireframe deck (reference only)
 ├── Wireframes Eduardo e Laura.html.srcmap.json
@@ -62,22 +65,24 @@ Each item has these fields:
 
 ```json
 {
-  "id":    "g1",
-  "cat":   "Cozinha",
-  "name":  "Jogo de panelas",
-  "desc":  "Linha tramontina inox premium, 7 peças.",
-  "price": 890,
-  "icon":  "pot"
+  "id":    "g10",
+  "cat":   "Entretenimento",
+  "name":  "Netflix do Casal",
+  "desc":  "Um ano de Netflix para maratonar juntos no sofá.",
+  "price": 296,
+  "image": "assets/gifts/netflix.png"
 }
 ```
 
-Available icon values: `pot`, `bed`, `coffee`, `wine`, `glass`, `fork`, `leaf`, `vase`
+### To add a new gift
+1. Drop an image into `assets/gifts/` (jpg, png or webp — square crops look best)
+2. Add a new entry to `gifts.json` with a unique `id` and set `"image"` to the file path
+3. Commit both files — no HTML or JS changes needed
 
-- **Add** an item → append a new object with a unique `id`
-- **Remove** an item → delete its object
-- **Change** details → edit the relevant fields
+- **Remove** an item → delete its object from the array
+- **Change** details → edit the relevant fields inline
 
-> The `id` field is used by `localStorage` to remember which gifts have been marked as given — never reuse an ID once it has been live.
+> The `id` field is used by `localStorage` to remember which gifts have been marked as given — never reuse an ID once it has been live. If an image is missing, the card shows the first letter of the gift name as a fallback.
 
 ---
 

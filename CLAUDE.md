@@ -48,6 +48,9 @@ Everything else in the repo is reference material or original wireframe files �
 ```
 index.html                                    ← EDIT THIS — single source of truth
 gifts.json                                    ← EDIT THIS to add/remove/change gift items
+assets/
+    gifts/                                    ← Drop gift images here (jpg/png/webp)
+        netflix.png                           ← Netflix do Casal
 design_handoff_wedding_site_eduardo_laura/
     README.md                                 ← Full design spec (good reference)
     assets/
@@ -155,18 +158,22 @@ The gift list is driven entirely by `gifts.json` at the repo root. No HTML or JS
 Each item has these fields:
 ```json
 {
-  "id":    "g1",          // unique string — never reuse an ID (localStorage tracks given status by ID)
-  "cat":   "Cozinha",     // category label shown above the name
-  "name":  "Jogo de panelas",
-  "desc":  "Linha tramontina inox premium, 7 peças.",
-  "price": 890,           // integer, BRL, no cents
-  "icon":  "pot"          // see available icons below
+  "id":    "g10",                          // unique string — never reuse an ID (localStorage tracks given status by ID)
+  "cat":   "Entretenimento",               // category label shown above the name
+  "name":  "Netflix do Casal",
+  "desc":  "Um ano de Netflix para maratonar juntos no sofá.",
+  "price": 296,                            // integer, BRL, no cents
+  "image": "assets/gifts/netflix.png"      // path relative to repo root
 }
 ```
 
-Available icon values: `pot`, `bed`, `coffee`, `wine`, `glass`, `fork`, `leaf`, `vase`
+### Adding a new gift with an image
+1. Drop the image file into `assets/gifts/` (jpg, png or webp — square or near-square crops look best)
+2. Add a new object to `gifts.json` with a unique `id` and `"image": "assets/gifts/yourfile.ext"`
+3. Commit both files
 
-To add an item: append a new object to the array with a unique `id`.
+If an image file is missing or fails to load, the card shows the first letter of the gift name as a fallback.
+
 To remove an item: delete its object from the array.
 To change details: edit the relevant fields.
 
@@ -200,6 +207,7 @@ To change details: edit the relevant fields.
 | Session 3 (AI) | Added `README.md` (project docs) and `CLAUDE.md` (this file, AI handoff context) |
 | Session 4 (AI) | Removed `Eduardo e Laura.html` — `index.html` is now the single source of truth; updated CLAUDE.md and README.md to reflect the simplified workflow |
 | Session 5 (AI) | Extracted gift list from inline JS into `gifts.json`; `index.html` now fetches it at runtime — edit the JSON to manage the gift list without touching HTML/JS |
+| Session 6 (AI) | Replaced SVG icon placeholders with real `<img>` tags; images live in `assets/gifts/`; `icon` field in JSON renamed to `image`; added Netflix do Casal (g10) with `assets/gifts/netflix.png` |
 
 ---
 

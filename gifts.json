@@ -5,7 +5,7 @@
     "name": "Jogo de panelas",
     "desc": "Linha tramontina inox premium, 7 peças.",
     "price": 890,
-    "icon": "pot"
+    "image": "assets/gifts/panelas.jpg"
   },
   {
     "id": "g2",
@@ -13,7 +13,7 @@
     "name": "Jogo de cama Queen",
     "desc": "Algodão egípcio 300 fios, cor off-white.",
     "price": 620,
-    "icon": "bed"
+    "image": "assets/gifts/cama.jpg"
   },
   {
     "id": "g3",
@@ -21,7 +21,7 @@
     "name": "Cafeteira italiana",
     "desc": "Moka inox 6 xícaras + moedor manual.",
     "price": 480,
-    "icon": "coffee"
+    "image": "assets/gifts/cafeteira.jpg"
   },
   {
     "id": "g4",
@@ -29,7 +29,7 @@
     "name": "Jantar especial",
     "desc": "Uma noite à dois em restaurante na viagem.",
     "price": 700,
-    "icon": "wine"
+    "image": "assets/gifts/jantar.jpg"
   },
   {
     "id": "g5",
@@ -37,7 +37,7 @@
     "name": "Conjunto de taças",
     "desc": "Cristal soprado, 6 unidades para vinho tinto.",
     "price": 540,
-    "icon": "glass"
+    "image": "assets/gifts/tacas.jpg"
   },
   {
     "id": "g6",
@@ -45,7 +45,7 @@
     "name": "Faqueiro 24 peças",
     "desc": "Inox escovado com cabo de madeira.",
     "price": 760,
-    "icon": "fork"
+    "image": "assets/gifts/faqueiro.jpg"
   },
   {
     "id": "g7",
@@ -53,7 +53,7 @@
     "name": "Diária no hotel",
     "desc": "Contribuição para uma noite especial.",
     "price": 1200,
-    "icon": "bed"
+    "image": "assets/gifts/hotel.jpg"
   },
   {
     "id": "g8",
@@ -61,7 +61,7 @@
     "name": "Aromatizador de ambientes",
     "desc": "Difusor com aroma de eucalipto e cedro.",
     "price": 280,
-    "icon": "leaf"
+    "image": "assets/gifts/aromatizador.jpg"
   },
   {
     "id": "g9",
@@ -69,6 +69,14 @@
     "name": "Vaso de cerâmica",
     "desc": "Peça artesanal grande, tom terroso.",
     "price": 390,
-    "icon": "vase"
+    "image": "assets/gifts/vaso.jpg"
+  },
+  {
+    "id": "g10",
+    "cat": "Entretenimento",
+    "name": "Netflix do Casal",
+    "desc": "Um ano de Netflix para maratonar juntos no sofá.",
+    "price": 296,
+    "image": "assets/gifts/netflix.png"
   }
 ]

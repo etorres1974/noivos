@@ -740,15 +740,29 @@
         oklch(0.95 0.012 150) 0 10px,
         oklch(0.92 0.016 150) 10px 20px);
     border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    position: relative;
+  }
+  .gift-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+  }
+  .gift-card:hover .gift-img img { transform: scale(1.04); }
+  /* Fallback shown when image is missing */
+  .gift-img-fallback {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-  }
-  .gift-img-icon {
-    width: 64px; height: 64px;
     color: var(--eucalypt);
-    opacity: 0.7;
+    opacity: 0.4;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
   }
   .gift-body {
     padding: 24px;
@@ -1440,20 +1454,8 @@
 
   /* ─── Gift list ──────────────────────────────────────── */
   // Gift data lives in gifts.json — edit that file to add/remove/change items.
-  // Icon names map to the ICONS lookup below. Available icons:
-  //   pot, bed, coffee, wine, glass, fork, leaf, vase
+  // Each item uses an "image" field pointing to assets/gifts/<filename>.
   let GIFTS = [];
-
-  const ICONS = {
-    pot: '<path d="M14 18h36v22a8 8 0 01-8 8H22a8 8 0 01-8-8V18z" /><path d="M10 18h44M22 12v6M42 12v6"/>',
-    bed: '<path d="M8 22v22M56 22v22M8 36h48M8 28h14a4 4 0 014 4v4M40 32h12a4 4 0 014 4v4"/>',
-    coffee: '<path d="M16 18h28v18a14 14 0 01-14 14h0a14 14 0 01-14-14V18z"/><path d="M44 22h6a6 6 0 010 12h-6"/><path d="M24 8c0 2 2 2 2 4s-2 2-2 4M32 8c0 2 2 2 2 4s-2 2-2 4"/>',
-    wine: '<path d="M22 8h20l-2 14a8 8 0 01-8 8h0a8 8 0 01-8-8L22 8zM32 30v18M22 50h20"/>',
-    glass: '<path d="M22 8h20l-2 14a8 8 0 01-8 8h0a8 8 0 01-8-8L22 8zM32 30v18M24 50h16"/>',
-    fork: '<path d="M22 8v18a4 4 0 01-4 4h0a4 4 0 01-4-4V8M18 8v18M40 8v8a6 6 0 006 6h2v34M22 30v26"/>',
-    leaf: '<path d="M14 50C14 28 28 14 50 14c0 22-14 36-36 36zM14 50L34 30"/>',
-    vase: '<path d="M22 12h20l-2 10c4 4 4 12 0 18s-4 12 0 18H22c4-6 4-12 0-18s-4-14 0-18l-2-10z"/>',
-  };
 
   const giftsGrid = document.getElementById('gifts-grid');
   const givenGifts = JSON.parse(localStorage.getItem('given_gifts_el') || '[]');
@@ -1464,9 +1466,9 @@
       return `
         <div class="gift-card ${given ? 'given' : ''}" data-id="${g.id}">
           <div class="gift-img">
-            <svg class="gift-img-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-              ${ICONS[g.icon] || ICONS.leaf}
-            </svg>
+            <img src="${g.image}" alt="${g.name}" loading="lazy"
+              onerror="this.style.display='none';this.parentElement.querySelector('.gift-img-fallback').style.display='flex'">
+            <div class="gift-img-fallback" style="display:none">${g.name[0]}</div>
           </div>
           <div class="gift-body">
             <div class="gift-cat">${g.cat}</div>
