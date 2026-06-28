@@ -1,0 +1,82 @@
+[
+  {
+    "id": "g1",
+    "cat": "Cozinha",
+    "name": "Jogo de panelas",
+    "desc": "Linha tramontina inox premium, 7 peças.",
+    "price": 890,
+    "image": "assets/gifts/panelas.jpg"
+  },
+  {
+    "id": "g2",
+    "cat": "Casa",
+    "name": "Jogo de cama Queen",
+    "desc": "Algodão egípcio 300 fios, cor off-white.",
+    "price": 620,
+    "image": "assets/gifts/cama.jpg"
+  },
+  {
+    "id": "g3",
+    "cat": "Sala",
+    "name": "Cafeteira italiana",
+    "desc": "Moka inox 6 xícaras + moedor manual.",
+    "price": 480,
+    "image": "assets/gifts/cafeteira.jpg"
+  },
+  {
+    "id": "g4",
+    "cat": "Lua de mel",
+    "name": "Jantar especial",
+    "desc": "Uma noite à dois em restaurante na viagem.",
+    "price": 700,
+    "image": "assets/gifts/jantar.jpg"
+  },
+  {
+    "id": "g5",
+    "cat": "Casa",
+    "name": "Conjunto de taças",
+    "desc": "Cristal soprado, 6 unidades para vinho tinto.",
+    "price": 540,
+    "image": "assets/gifts/tacas.jpg"
+  },
+  {
+    "id": "g6",
+    "cat": "Cozinha",
+    "name": "Faqueiro 24 peças",
+    "desc": "Inox escovado com cabo de madeira.",
+    "price": 760,
+    "image": "assets/gifts/faqueiro.jpg"
+  },
+  {
+    "id": "g7",
+    "cat": "Lua de mel",
+    "name": "Diária no hotel",
+    "desc": "Contribuição para uma noite especial.",
+    "price": 1200,
+    "image": "assets/gifts/hotel.jpg"
+  },
+  {
+    "id": "g8",
+    "cat": "Casa",
+    "name": "Aromatizador de ambientes",
+    "desc": "Difusor com aroma de eucalipto e cedro.",
+    "price": 280,
+    "image": "assets/gifts/aromatizador.jpg"
+  },
+  {
+    "id": "g9",
+    "cat": "Sala",
+    "name": "Vaso de cerâmica",
+    "desc": "Peça artesanal grande, tom terroso.",
+    "price": 390,
+    "image": "assets/gifts/vaso.jpg"
+  },
+  {
+    "id": "g10",
+    "cat": "Entretenimento",
+    "name": "Netflix do Casal",
+    "desc": "Um ano de Netflix para maratonar juntos no sofá.",
+    "price": 296,
+    "image": "assets/gifts/netflix.png"
+  }
+]
