@@ -11,9 +11,7 @@ Live at: **https://etorres1974.github.io/noivos/**
 ```
 noivos/
 │
-├── index.html                          ← GitHub Pages entry point (copy of main file)
-├── Eduardo e Laura.html                ← MAIN SOURCE FILE — edit this one
-├── Eduardo e Laura.html.srcmap.json    ← Source map for the wireframe viewer (ignore)
+├── index.html                          ← MAIN SOURCE FILE — edit this directly
 │
 ├── Wireframes Eduardo e Laura.html     ← Original lo-fi wireframe deck (reference only)
 ├── Wireframes Eduardo e Laura.html.srcmap.json
@@ -43,14 +41,12 @@ noivos/
 
 ## The Main File
 
-**`Eduardo e Laura.html`** is a fully self-contained single-page application. No build step, no framework, no npm. Pure HTML + CSS + vanilla JS in one file.
+**`index.html`** is a fully self-contained single-page application. No build step, no framework, no npm. Pure HTML + CSS + vanilla JS in one file. It is also the GitHub Pages entry point.
 
-`index.html` at the root is an exact copy, required for GitHub Pages to serve the site.
-**Always edit `Eduardo e Laura.html` and copy it to `index.html` before pushing.**
+**Edit `index.html` directly and commit it.**
 
 ```bash
-cp "Eduardo e Laura.html" index.html
-git add index.html "Eduardo e Laura.html"
+git add index.html
 git commit -m "your message"
 git push origin dev-genspark
 ```
@@ -86,7 +82,7 @@ git push origin dev-genspark
 
 ## Design Tokens (CSS variables)
 
-Defined in `:root` at the top of `Eduardo e Laura.html`:
+Defined in `:root` at the top of `index.html`:
 
 ```css
 --paper         #f7f5ef    /* main background, off-white     */

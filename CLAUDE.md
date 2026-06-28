@@ -19,15 +19,13 @@ A **single-page wedding website** for Eduardo & Laura.
 ## The One File That Matters
 
 ```
-Eduardo e Laura.html   ← THE source file. Self-contained HTML/CSS/JS.
-index.html             ← Exact copy of above. Required for GitHub Pages.
+index.html   ← THE source file. Self-contained HTML/CSS/JS. Edit this directly.
 ```
 
-**Always edit `Eduardo e Laura.html`, then copy to `index.html`, then commit both.**
+**Edit `index.html` directly and commit it.**
 
 ```bash
-cp "Eduardo e Laura.html" index.html
-git add "Eduardo e Laura.html" index.html
+git add index.html
 git commit -m "feat/fix: description"
 git push origin dev-genspark
 ```
@@ -48,8 +46,7 @@ Everything else in the repo is reference material or original wireframe files �
 ## File Layout (what's relevant)
 
 ```
-Eduardo e Laura.html                          ← EDIT THIS
-index.html                                    ← KEEP IN SYNC WITH ABOVE
+index.html                                    ← EDIT THIS — single source of truth
 design_handoff_wedding_site_eduardo_laura/
     README.md                                 ← Full design spec (good reference)
     assets/
@@ -172,6 +169,7 @@ nav-mobile-overlay                       mobile full-screen nav
 | Session 1 | Implemented full site in `Eduardo e Laura.html`: hero, countdown, event details, dress code, RSVP form, gift list with Pix modal, footer |
 | Session 2 (AI) | Fixed hero image (was placeholder → now `couple_kiss.png`), fixed modal animation, added mobile hamburger menu, added IntersectionObserver nav active state, added fade-in scroll animations; created `dev-genspark` branch; added `index.html` for GitHub Pages |
 | Session 3 (AI) | Added `README.md` (project docs) and `CLAUDE.md` (this file, AI handoff context) |
+| Session 4 (AI) | Removed `Eduardo e Laura.html` — `index.html` is now the single source of truth; updated CLAUDE.md and README.md to reflect the simplified workflow |
 
 ---
 
@@ -193,16 +191,13 @@ No install, no build, no env vars needed.
 # 1. Make sure you're on the right branch
 git checkout dev-genspark
 
-# 2. Edit Eduardo e Laura.html
+# 2. Edit index.html directly
 
-# 3. Sync index.html
-cp "Eduardo e Laura.html" index.html
-
-# 4. Commit both
-git add "Eduardo e Laura.html" index.html
+# 3. Commit
+git add index.html
 git commit -m "type(scope): description"
 
-# 5. Push
+# 4. Push
 git push origin dev-genspark
 ```
 
