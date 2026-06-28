@@ -12,7 +12,8 @@ A **single-page wedding website** for Eduardo & Laura.
 - **Venue**: R. Fox, S/N — Vila Base Aérea, Campo Grande/MS, CEP 79090-350
 - **Live URL**: https://etorres1974.github.io/noivos/
 - **GitHub repo**: https://github.com/etorres1974/noivos
-- **Active branch**: `dev-genspark` → served by GitHub Pages
+- **Active branch for development**: `google-form2` (PR #4 open → `main`)
+- **Production deployment**: `main` branch → GitHub Actions → GitHub Pages (via `.github/workflows/deploy.yml`)
 
 ---
 
@@ -208,18 +209,42 @@ To change details: edit the relevant fields.
 | Session 4 (AI) | Removed `Eduardo e Laura.html` — `index.html` is now the single source of truth; updated CLAUDE.md and README.md to reflect the simplified workflow |
 | Session 5 (AI) | Extracted gift list from inline JS into `gifts.json`; `index.html` now fetches it at runtime — edit the JSON to manage the gift list without touching HTML/JS |
 | Session 6 (AI) | Replaced SVG icon placeholders with real `<img>` tags; images live in `assets/gifts/`; `icon` field in JSON renamed to `image`; added Netflix do Casal (g10) with `assets/gifts/netflix.png` |
+| Session 7 (AI) | Created `.github/workflows/deploy.yml` — GitHub Actions workflow that generates `config.js` from repository variables (`vars.*`) and secrets (`secrets.PIX_KEY`) at deploy time, then publishes to GitHub Pages automatically on every push to `main`. Manual `config.js` upload is no longer needed. Updated `GOOGLE_FORMS_RSVP.md` Step 0f and Step 5 to document the Actions-based approach. |
 
 ---
 
 ## How to Run Locally
 
 ```bash
-# Any static file server works. Simplest:
+# Copy config.example.js → config.js and fill in real values
+cp config.example.js config.js
+# Edit config.js with your real PIX_KEY (Google Forms IDs are already in config.example.js)
+
+# Start a local server (required — fetch('gifts.json') doesn't work on file://)
 python3 -m http.server 8080
-# Then open: http://localhost:8080/index.html
+# Then open: http://localhost:8080
 ```
 
-No install, no build, no env vars needed.
+## Deployment (GitHub Pages via Actions)
+
+Pushing to `main` triggers `.github/workflows/deploy.yml` which:
+1. Generates `config.js` from repo variables (`vars.*`) and secrets (`secrets.PIX_KEY`)
+2. Deploys the full site (including generated `config.js`) to GitHub Pages
+
+**One-time setup** — add these in Settings → Secrets and variables → Actions:
+
+| Type | Name | Value |
+|------|------|-------|
+| Secret | `PIX_KEY` | real Pix key |
+| Variable | `GF_FORM_ID` | form ID from Google Forms |
+| Variable | `GF_ENTRY_NAME` | `entry.XXXXXXXXX` |
+| Variable | `GF_ENTRY_PHONE` | `entry.XXXXXXXXX` |
+| Variable | `GF_ENTRY_ATTENDING` | `entry.XXXXXXXXX` |
+| Variable | `GF_ENTRY_COMPANIONS` | `entry.XXXXXXXXX` |
+| Variable | `GF_ENTRY_RESTRICT` | `entry.XXXXXXXXX` |
+| Variable | `GF_ENTRY_MESSAGE` | `entry.XXXXXXXXX` |
+
+Also set **Settings → Pages → Source: "GitHub Actions"**.
 
 ---
 

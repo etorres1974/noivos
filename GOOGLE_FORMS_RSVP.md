@@ -141,36 +141,39 @@ if (pixKeyEl && typeof CONFIG !== 'undefined') {
 }
 ```
 
-### 0f — Deploy `config.js` to GitHub Pages
+### 0f — Deploy `config.js` via GitHub Actions (automated)
 
-GitHub Pages serves everything in the branch. Since `config.js` is
-gitignored, you need to push it **once** outside the normal workflow:
+`config.js` is **never committed or uploaded manually**. Instead, a
+GitHub Actions workflow generates it at deploy time from repository
+variables and secrets, then publishes the whole site to GitHub Pages.
 
-```bash
-# One-time: force-add config.js, push, then immediately untrack it
-git add --force config.js
-git commit -m "chore: deploy config (will be removed from tracking)"
-git push origin dev-genspark
+**One-time setup — add your values in the GitHub repo UI:**
 
-# Immediately remove from git tracking (keeps the file on disk)
-git rm --cached config.js
-git commit -m "chore: remove config.js from git tracking"
-git push origin dev-genspark
-```
+1. Go to your repo on github.com → **Settings → Secrets and variables →
+   Actions**.
+2. **Variables tab** — add each of these (non-sensitive):
 
-After these two commits, `config.js` lives on GitHub Pages (served to
-browsers) but is no longer in the git history going forward.
+   | Variable name | Value |
+   |---------------|-------|
+   | `GF_FORM_ID` | `1FAIpQLSe…` (your form ID) |
+   | `GF_ENTRY_NAME` | `entry.XXXXXXXXX` |
+   | `GF_ENTRY_PHONE` | `entry.XXXXXXXXX` |
+   | `GF_ENTRY_ATTENDING` | `entry.XXXXXXXXX` |
+   | `GF_ENTRY_COMPANIONS` | `entry.XXXXXXXXX` |
+   | `GF_ENTRY_RESTRICT` | `entry.XXXXXXXXX` |
+   | `GF_ENTRY_MESSAGE` | `entry.XXXXXXXXX` |
 
-> **Important:** The two commits above will briefly expose `config.js`
-> in git history. For a wedding site with 100 guests this is acceptable.
-> If you need zero exposure, the alternative is to use a paid GitHub
-> Pages plan with a proper CI/CD pipeline that injects secrets at build time.
+3. **Secrets tab** — add the sensitive value:
 
-> **Alternative — manual upload via GitHub UI:**
-> Go to your repo on github.com → `dev-genspark` branch → "Add file" →
-> "Upload files" → upload `config.js` directly. It will be served by
-> GitHub Pages without appearing in a commit alongside your source code.
-> This is the cleanest approach.
+   | Secret name | Value |
+   |-------------|-------|
+   | `PIX_KEY` | your real Pix key |
+
+4. **Settings → Pages** — set Source to **"GitHub Actions"**.
+
+After that, every push to `main` triggers `.github/workflows/deploy.yml`,
+which generates `config.js` on the runner and deploys the full site.
+`config.js` is never in the git history.
 
 ---
 
@@ -349,10 +352,17 @@ form.addEventListener('submit', async e => {
 
 ---
 
-## Step 5 — Deploy `config.js` to GitHub Pages
+## Step 5 — Deploy to GitHub Pages (automated)
 
-See Step 0f above. Use the **GitHub UI upload** (cleanest) or the
-force-add / rm-cached two-commit approach.
+No manual action needed. Push to `main` — the GitHub Actions workflow
+(`.github/workflows/deploy.yml`) will:
+
+1. Check out the repository.
+2. Generate `config.js` from repository variables (`vars.*`) and secrets (`secrets.PIX_KEY`).
+3. Upload the full site (including the generated `config.js`) as a Pages artifact.
+4. Deploy it to GitHub Pages.
+
+You can watch the run in the **Actions** tab of your repo.
 
 ---
 
@@ -416,7 +426,8 @@ git status   # config.js must NOT appear in the list
 |------|--------|-----------|
 | `.gitignore` | Created | ✅ Yes |
 | `config.example.js` | Created | ✅ Yes |
-| `config.js` | Created locally | ❌ No — gitignored |
+| `config.js` | Generated at deploy time by CI — never on disk in repo | ❌ No — gitignored |
+| `.github/workflows/deploy.yml` | Created — generates config.js from vars/secrets, deploys to Pages | ✅ Yes |
 | `index.html` | `<script src="config.js">` added; Pix key element emptied; Google Forms constants + new submit handler added | ✅ Yes |
 | `GOOGLE_FORMS_RSVP.md` | This file | ✅ Yes |
 | `CLAUDE.md` | Update session history after implementation | ✅ Yes |
@@ -427,11 +438,11 @@ git status   # config.js must NOT appear in the list
 
 | Task | Time |
 |------|------|
-| Step 0 — secrets pattern setup | 10 min |
+| Step 0 — secrets pattern setup + Actions workflow | 15 min |
 | Step 1 — create Google Form | 10 min |
 | Step 2 — extract entry IDs | 10 min |
 | Step 3 — update index.html | 15 min |
-| Step 4 — test end-to-end | 10 min |
-| Step 5 — deploy config.js | 5 min |
+| Step 4 — test end-to-end locally | 10 min |
+| Step 5 — add vars/secrets in GitHub UI + push to main | 10 min |
 | Step 6 — email notifications | 5 min |
-| **Total** | **~65 min** |
+| **Total** | **~75 min** |
