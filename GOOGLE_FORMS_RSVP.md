@@ -13,11 +13,11 @@ is sensitive and how to keep it out of the public repository.
 
 ### What is sensitive and must NOT be committed
 
-| Data | Where it currently lives | Risk if exposed |
-|------|--------------------------|-----------------|
-| **Real Pix key** (email, CPF or phone) | `index.html` line 1327 — placeholder `eduardo.laura@noivos.com.br` | Anyone can use it to receive Pix transfers impersonating the couple, or spam it |
-| **Google Forms Form ID** | Will be added to `index.html` in Step 3 | Anyone with the ID can flood the Google Sheet with fake RSVPs |
-| **Google Forms entry IDs** | Will be added to `index.html` in Step 3 | Same — enables automated spam submissions |
+| Data | Where it lives | Risk if exposed |
+|------|----------------|-----------------|
+| **Real Pix key** (email, CPF or phone) | `secrets.PIX_KEY` GitHub secret → injected into `config.js` by CI | Anyone can use it to receive Pix transfers impersonating the couple, or spam it |
+| **Google Forms Form ID** | `vars.GF_FORM_ID` GitHub variable → injected into `config.js` by CI | Anyone with the ID can flood the Google Sheet with fake RSVPs |
+| **Google Forms entry IDs** | `vars.GF_ENTRY_*` GitHub variables → injected into `config.js` by CI | Same — enables automated spam submissions |
 
 ### What is NOT sensitive (no action needed)
 
@@ -56,90 +56,44 @@ config.example.js  ← committed; shows the shape with placeholder values
 index.html         ← loads config.js via <script src="config.js">
 ```
 
-When you deploy to GitHub Pages you upload `config.js` **once** via the
-GitHub UI (or via `git add --force config.js` for a one-time push, then
-immediately remove it from tracking). Details in Step 0 below.
+`config.js` is **never committed or uploaded manually**. Instead, the
+GitHub Actions workflow (`.github/workflows/deploy.yml`) generates it at
+deploy time from repository variables and secrets. Details in Step 0f below.
 
 ---
 
 ## Step 0 — Set up the secrets pattern
 
-### 0a — Create `.gitignore`
+> **✅ Steps 0a–0e are already implemented.** The following is a record
+> of what was done, for reference.
 
-Create a `.gitignore` file at the repo root with:
+### 0a — `.gitignore` ✅
 
-```
-# Local config — contains real secrets, never commit
-config.js
-```
+`.gitignore` exists at the repo root and excludes `config.js`.
 
-### 0b — Create `config.example.js`
+### 0b — `config.example.js` ✅
 
-Create `config.example.js` at the repo root. This file **is committed** —
-it documents the shape without real values:
+`config.example.js` is committed. It contains the real Google Forms entry
+IDs (not secrets) and a placeholder for `PIX_KEY`.
 
-```js
-// config.example.js
-// Copy this file to config.js and fill in the real values.
-// config.js is gitignored and must never be committed.
-const CONFIG = {
-  // Pix key shown in the gift modal (email, CPF, phone, or random key)
-  PIX_KEY: 'your-real-pix-key-here',
+### 0c — Local `config.js` ✅
 
-  // Google Forms — obtained in Steps 1 and 2 of this plan
-  GF_FORM_ID:          '1FAIpQLSe_XXXXXXXXXXXX',
-  GF_ENTRY_NAME:       'entry.000000001',
-  GF_ENTRY_PHONE:      'entry.000000002',
-  GF_ENTRY_ATTENDING:  'entry.000000003',
-  GF_ENTRY_COMPANIONS: 'entry.000000004',
-  GF_ENTRY_RESTRICT:   'entry.000000005',
-  GF_ENTRY_MESSAGE:    'entry.000000006',
-};
-```
-
-### 0c — Create your local `config.js`
-
-On your machine only, copy the example and fill in real values:
+For local development, copy the example and fill in the real Pix key:
 
 ```bash
 cp config.example.js config.js
-# Now open config.js and fill in the real Pix key
-# (leave Google Forms fields as placeholders until Steps 1–2)
+# Edit config.js — set PIX_KEY to the real value
 ```
 
-### 0d — Load `config.js` in `index.html`
+### 0d — `config.js` loaded in `index.html` ✅
 
-Add this line in `index.html` **before the closing `</head>` tag**,
-before any other `<script>`:
+`<script src="config.js">` is already in the `<head>` of `index.html`,
+before any other scripts.
 
-```html
-<script src="config.js"></script>
-```
+### 0e — Pix key injected at runtime ✅
 
-This makes `CONFIG` available as a global variable to all subsequent scripts.
-
-### 0e — Replace the hardcoded Pix key in `index.html`
-
-**Current code (line 1327):**
-```html
-<div class="key-val" id="pix-key">eduardo.laura@noivos.com.br</div>
-```
-
-**Replace with:**
-```html
-<div class="key-val" id="pix-key"></div>
-```
-
-Then in the `<script>` block at the bottom, after `CONFIG` is available,
-add one line to populate it at runtime:
-
-```js
-// Inject Pix key from config (never hardcoded in HTML)
-const pixKeyEl = document.getElementById('pix-key');
-if (pixKeyEl && typeof CONFIG !== 'undefined') {
-  pixKeyEl.textContent = CONFIG.PIX_KEY;
-}
-```
+The `#pix-key` element in `index.html` is empty. The key is injected
+from `CONFIG.PIX_KEY` by JS at runtime — it is never hardcoded in HTML.
 
 ### 0f — Deploy `config.js` via GitHub Actions (automated)
 
