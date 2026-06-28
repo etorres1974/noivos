@@ -1,0 +1,73 @@
+name: Deploy to GitHub Pages
+
+# Runs on every push to main — generates config.js from repository
+# variables/secrets and deploys the full site to GitHub Pages.
+#
+# Required setup (one-time, in the GitHub repo UI):
+#
+#   Settings → Secrets and variables → Actions → Variables tab:
+#     GF_FORM_ID          – Google Forms form ID (1FAIpQLSe…)
+#     GF_ENTRY_NAME       – entry.XXXXXXXXX for "Nome completo"
+#     GF_ENTRY_PHONE      – entry.XXXXXXXXX for "WhatsApp"
+#     GF_ENTRY_ATTENDING  – entry.XXXXXXXXX for "Você poderá comparecer?"
+#     GF_ENTRY_COMPANIONS – entry.XXXXXXXXX for "Acompanhantes"
+#     GF_ENTRY_RESTRICT   – entry.XXXXXXXXX for "Restrições alimentares"
+#     GF_ENTRY_MESSAGE    – entry.XXXXXXXXX for "Mensagem aos noivos"
+#
+#   Settings → Secrets and variables → Actions → Secrets tab:
+#     PIX_KEY             – real Pix key (email, CPF, phone, or random key)
+#
+#   Settings → Pages → Source: "GitHub Actions"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          cat > config.js << 'ENDOFCONFIG'
+          const CONFIG = {
+            PIX_KEY:             '${{ secrets.PIX_KEY }}',
+            GF_FORM_ID:          '${{ vars.GF_FORM_ID }}',
+            GF_ENTRY_NAME:       '${{ vars.GF_ENTRY_NAME }}',
+            GF_ENTRY_PHONE:      '${{ vars.GF_ENTRY_PHONE }}',
+            GF_ENTRY_ATTENDING:  '${{ vars.GF_ENTRY_ATTENDING }}',
+            GF_ENTRY_COMPANIONS: '${{ vars.GF_ENTRY_COMPANIONS }}',
+            GF_ENTRY_RESTRICT:   '${{ vars.GF_ENTRY_RESTRICT }}',
+            GF_ENTRY_MESSAGE:    '${{ vars.GF_ENTRY_MESSAGE }}',
+          };
+          ENDOFCONFIG
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
