@@ -6,28 +6,171 @@ with zero backend and zero monthly cost.
 
 ---
 
-## How the technique works
+## Sensitive data audit
 
-Google Forms exposes a hidden POST endpoint for every form it creates.
-When a browser submits to that endpoint, Google silently records the
-response in the linked Google Sheet — even if the request comes from a
-completely different page.
+Before implementing, it is important to understand what data in this project
+is sensitive and how to keep it out of the public repository.
 
-We keep our own styled form in `index.html` exactly as it is. On submit,
-instead of only saving to `localStorage`, the JS handler also fires a
-`fetch` POST to the Google Forms endpoint in the background. The user
-never sees the Google Form or leaves the page.
+### What is sensitive and must NOT be committed
+
+| Data | Where it currently lives | Risk if exposed |
+|------|--------------------------|-----------------|
+| **Real Pix key** (email, CPF or phone) | `index.html` line 1327 — placeholder `eduardo.laura@noivos.com.br` | Anyone can use it to receive Pix transfers impersonating the couple, or spam it |
+| **Google Forms Form ID** | Will be added to `index.html` in Step 3 | Anyone with the ID can flood the Google Sheet with fake RSVPs |
+| **Google Forms entry IDs** | Will be added to `index.html` in Step 3 | Same — enables automated spam submissions |
+
+### What is NOT sensitive (no action needed)
+
+| Data | Why it is safe |
+|------|---------------|
+| `edulaura.com.br` domain in footer | A domain name is public by definition |
+| `localStorage` key names (`rsvp_eduardo_laura`, `given_gifts_el`) | Client-side identifiers only, no credentials |
+| Google Maps iframe embed | Uses no API key — the basic embed is public |
+| Couple names, date, venue address | Already public — guests need this information |
+
+---
+
+## The `.env` problem for pure static sites
+
+> **This is the most important section to understand before implementing.**
+
+In Node.js or Python apps, a `.env` file is read by the server at startup
+and injected into the app as environment variables — the secrets never reach
+the browser.
+
+**This project has no server and no build step.** Every file is served
+as-is by GitHub Pages. That means:
+
+- A `.env` file on your machine **cannot be automatically injected** into
+  `index.html` at deploy time.
+- If you hardcode secrets directly into `index.html`, they become public
+  the moment you push.
+
+The solution is a **`config.js` file that is gitignored** — it plays the
+same role as `.env` but works in a pure static context. The pattern is:
 
 ```
-User fills our form
-       │
-       ▼
-JS submit handler (index.html)
-       │
-       ├─► POST to Google Forms endpoint  ──► Google Sheet row added
-       │         (background, no redirect)
-       └─► showSuccess() — same UX as today
+.gitignore         ← lists config.js so it is never committed
+config.js          ← your machine only; holds real secrets
+config.example.js  ← committed; shows the shape with placeholder values
+index.html         ← loads config.js via <script src="config.js">
 ```
+
+When you deploy to GitHub Pages you upload `config.js` **once** via the
+GitHub UI (or via `git add --force config.js` for a one-time push, then
+immediately remove it from tracking). Details in Step 0 below.
+
+---
+
+## Step 0 — Set up the secrets pattern
+
+### 0a — Create `.gitignore`
+
+Create a `.gitignore` file at the repo root with:
+
+```
+# Local config — contains real secrets, never commit
+config.js
+```
+
+### 0b — Create `config.example.js`
+
+Create `config.example.js` at the repo root. This file **is committed** —
+it documents the shape without real values:
+
+```js
+// config.example.js
+// Copy this file to config.js and fill in the real values.
+// config.js is gitignored and must never be committed.
+const CONFIG = {
+  // Pix key shown in the gift modal (email, CPF, phone, or random key)
+  PIX_KEY: 'your-real-pix-key-here',
+
+  // Google Forms — obtained in Steps 1 and 2 of this plan
+  GF_FORM_ID:          '1FAIpQLSe_XXXXXXXXXXXX',
+  GF_ENTRY_NAME:       'entry.000000001',
+  GF_ENTRY_PHONE:      'entry.000000002',
+  GF_ENTRY_ATTENDING:  'entry.000000003',
+  GF_ENTRY_COMPANIONS: 'entry.000000004',
+  GF_ENTRY_RESTRICT:   'entry.000000005',
+  GF_ENTRY_MESSAGE:    'entry.000000006',
+};
+```
+
+### 0c — Create your local `config.js`
+
+On your machine only, copy the example and fill in real values:
+
+```bash
+cp config.example.js config.js
+# Now open config.js and fill in the real Pix key
+# (leave Google Forms fields as placeholders until Steps 1–2)
+```
+
+### 0d — Load `config.js` in `index.html`
+
+Add this line in `index.html` **before the closing `</head>` tag**,
+before any other `<script>`:
+
+```html
+<script src="config.js"></script>
+```
+
+This makes `CONFIG` available as a global variable to all subsequent scripts.
+
+### 0e — Replace the hardcoded Pix key in `index.html`
+
+**Current code (line 1327):**
+```html
+<div class="key-val" id="pix-key">eduardo.laura@noivos.com.br</div>
+```
+
+**Replace with:**
+```html
+<div class="key-val" id="pix-key"></div>
+```
+
+Then in the `<script>` block at the bottom, after `CONFIG` is available,
+add one line to populate it at runtime:
+
+```js
+// Inject Pix key from config (never hardcoded in HTML)
+const pixKeyEl = document.getElementById('pix-key');
+if (pixKeyEl && typeof CONFIG !== 'undefined') {
+  pixKeyEl.textContent = CONFIG.PIX_KEY;
+}
+```
+
+### 0f — Deploy `config.js` to GitHub Pages
+
+GitHub Pages serves everything in the branch. Since `config.js` is
+gitignored, you need to push it **once** outside the normal workflow:
+
+```bash
+# One-time: force-add config.js, push, then immediately untrack it
+git add --force config.js
+git commit -m "chore: deploy config (will be removed from tracking)"
+git push origin dev-genspark
+
+# Immediately remove from git tracking (keeps the file on disk)
+git rm --cached config.js
+git commit -m "chore: remove config.js from git tracking"
+git push origin dev-genspark
+```
+
+After these two commits, `config.js` lives on GitHub Pages (served to
+browsers) but is no longer in the git history going forward.
+
+> **Important:** The two commits above will briefly expose `config.js`
+> in git history. For a wedding site with 100 guests this is acceptable.
+> If you need zero exposure, the alternative is to use a paid GitHub
+> Pages plan with a proper CI/CD pipeline that injects secrets at build time.
+
+> **Alternative — manual upload via GitHub UI:**
+> Go to your repo on github.com → `dev-genspark` branch → "Add file" →
+> "Upload files" → upload `config.js` directly. It will be served by
+> GitHub Pages without appearing in a commit alongside your source code.
+> This is the cleanest approach.
 
 ---
 
@@ -35,8 +178,7 @@ JS submit handler (index.html)
 
 1. Go to https://forms.google.com and create a **new blank form**.
 2. Set the title to **"RSVP — Eduardo & Laura"** (internal only, guests never see it).
-3. Add the following questions **in this exact order** — the order matters because
-   we will match them by field name, not position:
+3. Add the following questions **in this exact order**:
 
 | # | Question text | Type | Required |
 |---|---------------|------|----------|
@@ -50,79 +192,88 @@ JS submit handler (index.html)
 4. Click **Responses → Link to Sheets** → create a new spreadsheet called
    **"RSVP Eduardo e Laura"**. This is where all submissions will appear.
 
-5. Click **Send** (the paper-plane icon) → **link icon** → copy the full URL.
-   It looks like:
+5. Click **Send** → **link icon** → copy the full URL:
    ```
    https://docs.google.com/forms/d/e/1FAIpQLSe_XXXXXXXXXXXX/viewform
    ```
-   Save this URL — we need the form ID from it (`1FAIpQLSe_XXXXXXXXXXXX`).
+   The form ID is the `1FAIpQLSe_XXXXXXXXXXXX` part.
 
 ---
 
 ## Step 2 — Extract the field entry IDs
 
-Google Forms identifies each question internally with an `entry.XXXXXXXXX`
-parameter. We need to find the entry ID for each of our 6 fields.
+Google Forms identifies each question with an `entry.XXXXXXXXX` parameter.
 
 **How to find them:**
 
-1. Open your Google Form's **preview URL**:
+1. Open your Google Form's preview URL:
    ```
    https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform
    ```
-2. Right-click the page → **View Page Source** (or Inspect).
+2. Right-click → **View Page Source**.
 3. Search for `entry.` — you will see blocks like:
    ```html
    <input name="entry.123456789" type="hidden" ...>
    ```
 4. Match each `entry.XXXXXXXXX` to its question by reading the surrounding HTML.
-5. Record all 6 entry IDs in this table:
+5. Fill in your local `config.js` with the real values:
 
-| Field | Entry ID (fill in) |
-|-------|-------------------|
-| Nome completo | `entry.` |
-| WhatsApp | `entry.` |
-| Você poderá comparecer? | `entry.` |
-| Acompanhantes | `entry.` |
-| Restrições alimentares | `entry.` |
-| Mensagem aos noivos | `entry.` |
+```js
+const CONFIG = {
+  PIX_KEY:             'your-real-pix-key',
+  GF_FORM_ID:          '1FAIpQLSe_...',      // ← paste real form ID
+  GF_ENTRY_NAME:       'entry.123456781',    // ← paste real entry IDs
+  GF_ENTRY_PHONE:      'entry.123456782',
+  GF_ENTRY_ATTENDING:  'entry.123456783',
+  GF_ENTRY_COMPANIONS: 'entry.123456784',
+  GF_ENTRY_RESTRICT:   'entry.123456785',
+  GF_ENTRY_MESSAGE:    'entry.123456786',
+};
+```
 
 ---
 
 ## Step 3 — Update index.html
 
-### 3a — Add a helper constant near the top of the `<script>` block
+### 3a — Load config.js (from Step 0d, if not done yet)
 
-Find the `/* ─── Countdown ─── */` comment and add this block just before it:
+```html
+<!-- in <head>, before any other <script> -->
+<script src="config.js"></script>
+```
+
+### 3b — Add the Google Forms config block
+
+Near the top of the main `<script>` block, before `/* ─── Countdown ─── */`,
+add:
 
 ```js
 /* ─── Google Forms RSVP config ──────────────────────── */
-const GF_ENDPOINT = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse';
+// All values come from config.js — never hardcode them here.
+const GF_ENDPOINT =
+  `https://docs.google.com/forms/d/e/${CONFIG.GF_FORM_ID}/formResponse`;
 const GF_FIELDS = {
-  name:         'entry.XXXXXXXXX',   // Nome completo
-  phone:        'entry.XXXXXXXXX',   // WhatsApp
-  attending:    'entry.XXXXXXXXX',   // Você poderá comparecer?
-  companions:   'entry.XXXXXXXXX',   // Acompanhantes
-  restrictions: 'entry.XXXXXXXXX',   // Restrições alimentares
-  message:      'entry.XXXXXXXXX',   // Mensagem aos noivos
+  name:         CONFIG.GF_ENTRY_NAME,
+  phone:        CONFIG.GF_ENTRY_PHONE,
+  attending:    CONFIG.GF_ENTRY_ATTENDING,
+  companions:   CONFIG.GF_ENTRY_COMPANIONS,
+  restrictions: CONFIG.GF_ENTRY_RESTRICT,
+  message:      CONFIG.GF_ENTRY_MESSAGE,
 };
 ```
 
-Replace `YOUR_FORM_ID` and each `entry.XXXXXXXXX` with the real values from Step 2.
-
-### 3b — Replace the submit handler
+### 3c — Replace the submit handler
 
 Find the current `form.addEventListener('submit', ...)` block (around line 1426)
-and replace it with this:
+and replace it with:
 
 ```js
 form.addEventListener('submit', async e => {
   e.preventDefault();
 
-  const name    = document.getElementById('rsvp-name').value.trim();
-  const phone   = document.getElementById('rsvp-phone').value.trim();
+  const name  = document.getElementById('rsvp-name').value.trim();
+  const phone = document.getElementById('rsvp-phone').value.trim();
 
-  // Client-side validation — same as before
   if (!name || !phone) {
     if (!name) document.getElementById('rsvp-name').focus();
     else       document.getElementById('rsvp-phone').focus();
@@ -133,8 +284,7 @@ form.addEventListener('submit', async e => {
     .map(i => i.value.trim()).filter(Boolean);
 
   const data = {
-    name,
-    phone,
+    name, phone,
     attending:    attendVal,
     companions,
     restrictions: document.getElementById('rsvp-restr').value.trim(),
@@ -142,12 +292,11 @@ form.addEventListener('submit', async e => {
     ts:           Date.now(),
   };
 
-  // Disable button and show loading state
   const submitBtn = form.querySelector('.form-submit');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Enviando…';
 
-  // Build the Google Forms POST body
+  // Build the Google Forms POST body — field names come from CONFIG
   const body = new URLSearchParams();
   body.append(GF_FIELDS.name,         data.name);
   body.append(GF_FIELDS.phone,        data.phone);
@@ -157,21 +306,13 @@ form.addEventListener('submit', async e => {
   body.append(GF_FIELDS.message,      data.message);
 
   try {
-    // Google Forms does not support CORS — we use no-cors so the browser
-    // sends the request without reading the response. This is expected;
-    // the submission still goes through on Google's side.
-    await fetch(GF_ENDPOINT, {
-      method: 'POST',
-      mode:   'no-cors',
-      body,
-    });
+    // Google Forms does not support CORS — no-cors sends the request
+    // without reading the response. Submission goes through on Google's side.
+    await fetch(GF_ENDPOINT, { method: 'POST', mode: 'no-cors', body });
   } catch (err) {
-    // Network failure — still save locally and show success.
-    // Optionally log the error for debugging.
     console.warn('Google Forms submit failed:', err);
   }
 
-  // Always save locally as a fallback and show the success screen
   localStorage.setItem('rsvp_eduardo_laura', JSON.stringify(data));
   showSuccess(name);
 });
@@ -181,19 +322,20 @@ form.addEventListener('submit', async e => {
 
 ## Step 4 — Test end-to-end
 
-1. Run the site locally:
+1. Make sure your local `config.js` has real values.
+2. Run the site:
    ```bash
    python3 -m http.server 8080
    # open http://localhost:8080
    ```
-2. Fill in the RSVP form and submit.
-3. Open your Google Sheet — the new row should appear within a few seconds.
-4. Verify all 6 columns are populated correctly.
+3. Fill in the RSVP form and submit.
+4. Open your Google Sheet — the new row should appear within a few seconds.
 
-**What to check in the sheet:**
+**What to check:**
 
 | Column | Expected value |
 |--------|---------------|
+| Timestamp | Auto-filled by Google |
 | Nome completo | The name you typed |
 | WhatsApp | The phone you typed |
 | Você poderá comparecer? | `Sim` or `Não` |
@@ -201,80 +343,83 @@ form.addEventListener('submit', async e => {
 | Restrições alimentares | Text, or empty |
 | Mensagem aos noivos | Text, or empty |
 
-> **Note on the network tab:** The fetch uses `mode: 'no-cors'`, so the
-> browser will show the request as `(opaque)` with status 0 in DevTools.
-> This is normal — it does not mean the submission failed.
-> Confirm success by checking the Google Sheet, not the network tab.
+> The fetch uses `mode: 'no-cors'`, so DevTools shows the request as
+> `(opaque)` with status 0. This is normal. Confirm success in the Sheet,
+> not in the network tab.
 
 ---
 
-## Step 5 — (Optional) Email notifications
+## Step 5 — Deploy `config.js` to GitHub Pages
 
-To get an email every time someone submits:
+See Step 0f above. Use the **GitHub UI upload** (cleanest) or the
+force-add / rm-cached two-commit approach.
+
+---
+
+## Step 6 — (Optional) Email notifications
 
 1. Open the Google Sheet.
 2. **Tools → Notification rules**.
 3. Set: *"Any changes are made"* → *"Email — right away"*.
-4. Both Eduardo and Laura can add their own notification rule by opening
-   the sheet from their own Google account.
+4. Both Eduardo and Laura can add their own rule from their own Google account.
 
 ---
 
-## Step 6 — View and manage responses
+## Step 7 — View and manage responses
 
-All responses live in the Google Sheet. Useful things to do there:
-
-- **Filter column C** ("Você poderá comparecer?") = `Sim` to get the confirmed guest list.
-- **Add a column** "Total na mesa" with formula `=1 + LEN(D2) - LEN(SUBSTITUTE(D2,",",""))` to count companions automatically (adjust D2 to the companions column).
-- **Share the sheet** with your wedding planner or family members via Google Sheets' share button — read-only access is fine.
-- **Export to CSV/Excel** via File → Download at any time.
+- **Filter column D** ("Você poderá comparecer?") = `Sim` → confirmed guest list.
+- **Count total guests** with: `=COUNTIF(D:D,"Sim")`.
+- **Share the sheet** read-only with your wedding planner.
+- **Export** via File → Download → CSV or Excel at any time.
 
 ---
 
 ## Important caveats
 
 ### CORS and `no-cors`
-Google Forms does not set CORS headers, so we cannot read the response
-from `fetch`. We use `mode: 'no-cors'` which tells the browser to send
-the request anyway and discard the response. The submission goes through;
-we just can't confirm it programmatically. This is the standard technique
-for this approach and is used widely.
-
-**Implication:** if Google Forms is down or changes its endpoint format,
-submissions will silently fail. The localStorage fallback means the user
-always sees the success screen, but the data won't be in the sheet.
-For 100 guests this risk is acceptable. If you want guaranteed delivery,
-use Formspree (Option 1) or Supabase (Option 3).
+We cannot read Google's response. The submission goes through; we just
+can't confirm it programmatically. The `localStorage` fallback ensures
+the user always sees the success screen.
 
 ### Google may change the endpoint
 Google does not officially support this technique. The `formResponse`
-endpoint has been stable for many years, but Google could change it
-without notice. Monitor the Google Sheet in the days after launch to
-confirm submissions are arriving.
+endpoint has been stable for many years, but monitor the Sheet after
+launch to confirm submissions are arriving.
 
-### Companions field
-The current form collects companion names as individual inputs and we
-join them with commas into a single string (e.g. `"Maria, João"`).
-This keeps the Google Form simple (one field instead of four).
-If you need each companion in a separate column, add up to 4 companion
-questions in the Google Form and update `GF_FIELDS` and the `body.append`
-calls accordingly.
+### `config.js` is public on GitHub Pages
+Even though `config.js` is gitignored and not in the repo source, once
+deployed it is **publicly accessible** at
+`https://etorres1974.github.io/noivos/config.js`. This means:
 
-### Timestamp
-Google Forms automatically adds a "Timestamp" column (column A) with the
-submission time in the sheet's timezone. You do not need to send it manually.
+- The **Pix key** will be readable by anyone who knows the URL.
+  This is unavoidable in a pure static site — the browser must receive
+  the key to display it. The pattern prevents the key from being
+  **searchable in the git history**, which is the main risk.
+- The **Google Forms entry IDs** will also be readable. Anyone could
+  use them to submit fake RSVPs. For 100 guests this risk is low;
+  Google Forms has its own spam protection.
+- If you need stronger protection (e.g. for the Pix key), the only real
+  solution is a backend that serves the key after authenticating the user.
+  That is out of scope for this project.
+
+### Never commit `config.js`
+Verify `.gitignore` is working before every push:
+```bash
+git status   # config.js must NOT appear in the list
+```
 
 ---
 
-## Files to change
+## Files changed / created
 
-| File | Change |
-|------|--------|
-| `index.html` | Add `GF_ENDPOINT` + `GF_FIELDS` constants; replace submit handler |
-| `GOOGLE_FORMS_RSVP.md` | This file — keep as reference |
-| `CLAUDE.md` | Update session history once implemented |
-
-No new files, no new dependencies, no build step.
+| File | Action | Committed? |
+|------|--------|-----------|
+| `.gitignore` | Created | ✅ Yes |
+| `config.example.js` | Created | ✅ Yes |
+| `config.js` | Created locally | ❌ No — gitignored |
+| `index.html` | `<script src="config.js">` added; Pix key element emptied; Google Forms constants + new submit handler added | ✅ Yes |
+| `GOOGLE_FORMS_RSVP.md` | This file | ✅ Yes |
+| `CLAUDE.md` | Update session history after implementation | ✅ Yes |
 
 ---
 
@@ -282,9 +427,11 @@ No new files, no new dependencies, no build step.
 
 | Task | Time |
 |------|------|
-| Create Google Form (Step 1) | 10 min |
-| Extract entry IDs (Step 2) | 10 min |
-| Update index.html (Step 3) | 15 min |
-| Test end-to-end (Step 4) | 10 min |
-| Set up email notifications (Step 5) | 5 min |
-| **Total** | **~50 min** |
+| Step 0 — secrets pattern setup | 10 min |
+| Step 1 — create Google Form | 10 min |
+| Step 2 — extract entry IDs | 10 min |
+| Step 3 — update index.html | 15 min |
+| Step 4 — test end-to-end | 10 min |
+| Step 5 — deploy config.js | 5 min |
+| Step 6 — email notifications | 5 min |
+| **Total** | **~65 min** |
